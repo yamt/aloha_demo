@@ -39,7 +39,7 @@ start() ->
 
     aloha_tcp:start(),
     aloha_upper:start([]),
-    aloha_upper:start([{mod, gen_tcp}]),
+%    aloha_upper:start([{mod, gen_tcp}]),
 
 %    application:start(sasl),
     application:start(ranch),
