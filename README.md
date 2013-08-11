@@ -6,7 +6,11 @@ An example to use aloha.
 "make run" starts an OpenFlow controller which listens for OpenFlow
 connections on port 6633.
 
-    http server (cowboy/ranch)
+    aloha_httpd_http
+       |
+    cowboy
+       |
+    ranch
        |
     aloha_socket
        |
