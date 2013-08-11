@@ -16,7 +16,11 @@ connections on port 6633.
        |
     aloha_nic  (this virtual NIC has IP address 192.0.2.1)
        |
-    of_control
+    aloha_datapath
+       |
+    aloha_ofc  (this uses of_control)
+       |
+    aloha_socket
        :
        : (OpenFlow channel)
        :
