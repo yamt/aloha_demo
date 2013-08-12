@@ -22,7 +22,7 @@ connections on port 6633.
        |
     aloha_datapath
        |
-    aloha_ofc  (this uses of_control)
+    aloha_ofc  (this uses of_protocol)
        |
     aloha_socket
        :
