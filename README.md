@@ -1,7 +1,10 @@
 aloha_demo
 ==========
 
-An example to use aloha.
+This is an example to use aloha.
+
+How to run
+----------
 
 "make run" starts an OpenFlow controller which listens for OpenFlow
 connections on port 6633.
