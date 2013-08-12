@@ -1,7 +1,7 @@
 aloha_demo
 ==========
 
-This is an example to use aloha.
+This is an example to use [aloha](https://github.com/yamt/aloha).
 
 [![Build Status](https://travis-ci.org/yamt/aloha_demo.png?branch=master)](https://travis-ci.org/yamt/aloha_demo)
 
