@@ -111,12 +111,13 @@ decode_enum(Enum, Value) ->
     ofp_utils:get_enum_name(EnumMod, Enum, Value).
 
 packet_in(Dp, InPort, Packet) ->
+    lager:info("packet_in ~w ~w~n", [InPort, Packet]),
     NicPid = get_nic(Dp, InPort),
     gen_server:cast(NicPid, {set_backend, {Dp, InPort}}),  % XXX
     gen_server:cast(NicPid, {packet, Packet}).
 
 packet_out(Dp, Port, BinPacket) ->
-    %lager:info("packet_out ~w ~w~n", [Port, BinPacket]),
+    lager:info("packet_out ~w ~w~n", [Port, BinPacket]),
     send_msg(Dp, #ofp_packet_out{actions=[#ofp_action_output{port=Port}],
                                  in_port=controller, data=BinPacket}).
 
