@@ -30,7 +30,7 @@
 
 -define(OFP_VERSION, 4).
 
--record(datapath, {sock, parser}).
+-record(datapath, {sock, parser, id, q = []}).
 
 msg(Body, Xid) -> #ofp_message{version=?OFP_VERSION, xid=Xid, body=Body}.
 
@@ -42,6 +42,7 @@ handle_conn(Sock) ->
 
 ofp_setup(#datapath{sock=Sock} = Dp) ->
     send_msg(Dp, #ofp_hello{}),
+    send_msg(Dp, #ofp_features_request{}),
     send_msg(Dp, #ofp_set_config{miss_send_len=no_buffer}),
     send_msg(Dp, #ofp_flow_mod{table_id=0, command=add,
         instructions=[
@@ -65,23 +66,54 @@ loop(#datapath{sock=Sock, parser=Parser} = Dp) ->
             lists:foreach(fun(M) -> self() ! {msg, Sock, M} end, Msgs),
             loop(Dp#datapath{parser=NewParser});
         {tcp_closed, Sock} ->
-            lager:info("OF ~p closed", [Sock]);
+            lager:info("OF ~p closed", [Sock]),
+            done(Dp);
         {msg, Sock, #ofp_message{xid=Xid, body=Body}=Msg} ->
             lager:debug("msg received ~p~n", [Msg]),
-            handle_msg(Dp, Body, Xid),
+            Dp2 = handle_msg(Body, Xid, Dp),
+            loop(Dp2);
+        {packet_out, Port, BinPacket} ->
+            send_packet_out(BinPacket, Port, Dp),
             loop(Dp);
         M ->
-            lager:info("unknown ~p~n", [M])
+            lager:info("unknown msg ~p~n", [M]),
+            done(Dp)
     end.
 
-handle_msg(Dp, #ofp_echo_request{data=Data}, Xid) ->
-    send_msg(Dp, #ofp_echo_reply{data=Data}, Xid);
-handle_msg(Dp, #ofp_packet_in{match=Match, data=Data}, _Xid) ->
+done(Dp) ->
+    % exit
+    case Dp#datapath.id of
+        undefined -> ok;
+        Id -> ets:delete(aloha_datapath, Id)
+    end.
+
+handle_msg(#ofp_hello{} = Msg, _Xid, Dp) ->
+    lager:info("hello received ~p", [Msg]),
+    Dp;
+handle_msg(#ofp_features_reply{datapath_mac = Mac, datapath_id = Id}, _Xid,
+           #datapath{id = undefined, q = Q} = Dp) ->
+    DpId = {Id, Mac},
+    lists:foreach(fun(Msg) ->
+        lager:info("reply msg ~p", [Msg]),
+        self() ! Msg
+    end, Q),
+    lager:info("register datapath process ~p for ~w", [self(), DpId]),
+    true = ets:insert_new(aloha_datapath, {DpId, self()}),
+    Dp#datapath{id = DpId, q = []};
+handle_msg(Msg, Xid, #datapath{id = undefined, q = Q} = Dp) ->
+    lager:info("hold msg ~p", [Msg]),
+    Dp#datapath{q = Q ++ [#ofp_message{xid = Xid, body = Msg}]};
+handle_msg(#ofp_echo_request{data=Data}, Xid, Dp) ->
+    send_msg(Dp, #ofp_echo_reply{data=Data}, Xid),
+    Dp;
+handle_msg(#ofp_packet_in{match=Match, data=Data}, _Xid, Dp) ->
     <<IntInPort:32>> = match_field(Match, in_port),
     InPort = decode_enum(port_no, IntInPort),
-    packet_in(Dp, InPort, Data);
-handle_msg(_Dp, _M, _Xid) ->
-    ok.
+    packet_in(Data, InPort, Dp),
+    Dp;
+handle_msg(Msg, _Xid, Dp) ->
+    lager:info("unknown OF msg ~p", [Msg]),
+    Dp.
 
 match_field(Match, Field) ->
     case lists:keyfind(Field, #ofp_field.name, Match#ofp_match.fields) of
@@ -107,21 +139,29 @@ send_msg(Dp, Body, Xid) ->
     end.
 
 decode_enum(Enum, Value) ->
-    EnumMod = list_to_atom("ofp_v" ++ integer_to_list(?OFP_VERSION)++ "_enum"),
+    EnumMod = list_to_atom("ofp_v" ++ integer_to_list(?OFP_VERSION) ++ "_enum"),
     ofp_utils:get_enum_name(EnumMod, Enum, Value).
 
-packet_in(Dp, InPort, Packet) ->
-    lager:info("packet_in ~w ~w~n", [InPort, Packet]),
-    NicPid = get_nic(Dp, InPort),
-    gen_server:cast(NicPid, {set_backend, {Dp, InPort}}),  % XXX
+packet_in(Packet, InPort, #datapath{id = DpId}) ->
+    lager:debug("packet_in ~w ~w ~w~n", [DpId, InPort, Packet]),
+    NicPid = get_nic(DpId, InPort),
+    % XXX
+    gen_server:cast(NicPid, {set_backend,
+                             {?MODULE, packet_out, [InPort, DpId]}}),
     gen_server:cast(NicPid, {packet, Packet}).
 
-packet_out(Dp, Port, BinPacket) ->
-    lager:info("packet_out ~w ~w~n", [Port, BinPacket]),
-    send_msg(Dp, #ofp_packet_out{actions=[#ofp_action_output{port=Port}],
-                                 in_port=controller, data=BinPacket}).
+packet_out(BinPacket, Port, DpId) ->
+    lager:debug("packet_out ~w ~w~n", [DpId, Port, BinPacket]),
+    case catch ets:lookup_element(aloha_datapath, DpId, 2) of
+        Pid when is_pid(Pid) -> Pid ! {packet_out, Port, BinPacket};
+        _ -> lager:info("no datapath process for ~w", [DpId])
+    end.
 
-get_nic(_Dp, InPort) ->
+send_packet_out(BinPacket, Port, Dp) ->
+    send_msg(Dp, #ofp_packet_out{actions = [#ofp_action_output{port = Port}],
+                                 in_port = controller, data = BinPacket}).
+
+get_nic(_DpId, InPort) ->
     % XXX
     ets:lookup_element(nic_table, InPort, 2).
 

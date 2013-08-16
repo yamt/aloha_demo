@@ -29,8 +29,11 @@ start() ->
     lager:start(),
     lager:info("start~n", []),
 
+    % XXX these should not be here
+    ets:new(aloha_datapath, [set, named_table, public]),
+    ets:new(nic_table, [set, named_table]),
+
     % configuration
-    ets:new(nic_table, [set, named_table]),  % XXX should not be here
     HwAddr = <<16#0003478ca1b3:48>>,  % taken from my unused machine
     IPAddr = <<192,0,2,1>>,
     {ok, Pid} = gen_server:start(aloha_nic, [{addr, HwAddr}], []),
