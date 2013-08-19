@@ -36,8 +36,8 @@ start() ->
     % configuration
     HwAddr = <<16#0003478ca1b3:48>>,  % taken from my unused machine
     IPAddr = <<192,0,2,1>>,
-    {ok, Pid} = gen_server:start(aloha_nic, [{addr, HwAddr}], []),
-    gen_server:cast(Pid, {set_prop, {ip_addr, IPAddr}}),
+    {ok, Pid} = gen_server:start(aloha_nic,
+                                 [{addr, HwAddr}, {ip_addr, IPAddr}], []),
     register_nic(local, Pid),
 
     aloha_tcp:start(),

@@ -146,8 +146,8 @@ packet_in(Packet, InPort, #datapath{id = DpId}) ->
     lager:debug("packet_in ~w ~w ~w~n", [DpId, InPort, Packet]),
     NicPid = get_nic(DpId, InPort),
     % XXX
-    gen_server:cast(NicPid, {set_backend,
-                             {?MODULE, packet_out, [InPort, DpId]}}),
+    gen_server:cast(NicPid, {setopts, [{backend, {?MODULE, packet_out,
+                                                  [InPort, DpId]}}]}),
     gen_server:cast(NicPid, {packet, Packet}).
 
 packet_out(BinPacket, Port, DpId) ->
