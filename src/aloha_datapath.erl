@@ -144,10 +144,7 @@ decode_enum(Enum, Value) ->
 
 packet_in(Packet, InPort, #datapath{id = DpId}) ->
     lager:debug("packet_in ~w ~w ~w~n", [DpId, InPort, Packet]),
-    NicPid = get_nic(DpId, InPort),
-    % XXX
-    gen_server:cast(NicPid, {setopts, [{backend, {?MODULE, packet_out,
-                                                  [InPort, DpId]}}]}),
+    NicPid = find_or_create_nic(DpId, InPort),
     gen_server:cast(NicPid, {packet, Packet}).
 
 packet_out(BinPacket, Port, DpId) ->
@@ -161,9 +158,26 @@ send_packet_out(BinPacket, Port, Dp) ->
     send_msg(Dp, #ofp_packet_out{actions = [#ofp_action_output{port = Port}],
                                  in_port = controller, data = BinPacket}).
 
-get_nic(_DpId, InPort) ->
-    % XXX
-    ets:lookup_element(nic_table, InPort, 2).
+find_or_create_nic(DpId, InPort) ->
+    Key = {DpId, InPort},
+    case catch ets:lookup_element(aloha_nic, Key, 2) of
+        Pid when is_pid(Pid) ->
+            Pid;
+        _ ->
+            create_nic(DpId, InPort),
+            find_or_create_nic(DpId, InPort)
+    end.
+
+create_nic(DpId, InPort) ->
+    Key = {DpId, InPort},
+    HwAddr = <<16#0003478ca1b3:48>>,  % taken from my unused machine
+    IPAddr = <<192,0,2,1>>,
+    {ok, Pid} = gen_server:start(aloha_nic,
+                                 [{key, Key},
+                                  {addr, HwAddr}, {ip_addr, IPAddr},
+                                  {backend, {?MODULE, packet_out,
+                                             [InPort, DpId]}}], []),
+    lager:info("nic ~p created", [Pid]).
 
 get_xid() ->
     % XXX

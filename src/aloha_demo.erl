@@ -31,14 +31,7 @@ start() ->
 
     % XXX these should not be here
     ets:new(aloha_datapath, [set, named_table, public]),
-    ets:new(nic_table, [set, named_table]),
-
-    % configuration
-    HwAddr = <<16#0003478ca1b3:48>>,  % taken from my unused machine
-    IPAddr = <<192,0,2,1>>,
-    {ok, Pid} = gen_server:start(aloha_nic,
-                                 [{addr, HwAddr}, {ip_addr, IPAddr}], []),
-    register_nic(local, Pid),
+    ets:new(aloha_nic, [set, named_table, public]),
 
     aloha_tcp:start(),
     aloha_upper:start([]),
@@ -52,7 +45,3 @@ start() ->
     aloha_httpd:start(aloha_httpd_aloha, aloha_ranch, 8080),
 
     aloha_ofc:start().
-
-register_nic(InPort, Pid) ->
-    % XXX
-    ets:insert(nic_table, {InPort, Pid}).
