@@ -112,7 +112,7 @@ handle_msg(#ofp_packet_in{match=Match, data=Data}, _Xid, Dp) ->
     packet_in(Data, InPort, Dp),
     Dp;
 handle_msg(Msg, _Xid, Dp) ->
-    lager:info("unknown OF msg ~p", [Msg]),
+    lager:info("unhandled OF msg ~p", [aloha_utils:pr(Msg, ?MODULE)]),
     Dp.
 
 match_field(Match, Field) ->
