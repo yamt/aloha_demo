@@ -174,9 +174,12 @@ create_nic(DpId, InPort) ->
     Key = {DpId, InPort},
     HwAddr = <<16#0003478ca1b3:48>>,  % taken from my unused machine
     IPAddr = <<192,0,2,1>>,
+    IPv6Addr = <<16#2001:16, 16#db8:16, 0:(16*5), 1:16>>,  % RFC 3849
     {ok, Pid} = gen_server:start(aloha_nic,
                                  [{key, Key},
-                                  {addr, HwAddr}, {ip_addr, IPAddr},
+                                  {addr, HwAddr},
+                                  {ip_addr, IPAddr},
+                                  {ipv6_addr, IPv6Addr},
                                   {backend, {?MODULE, packet_out,
                                              [InPort, DpId]}}], []),
     lager:info("nic ~p created", [Pid]).
