@@ -52,6 +52,8 @@ ofp_setup(#datapath{sock=Sock} = Dp) ->
                 ]
             }
         ]}),
+    send_msg(Dp, #ofp_desc_request{}),
+    send_msg(Dp, #ofp_port_desc_request{}),
     send_msg(Dp, #ofp_barrier_request{}),
     % XXX
     aloha_socket:setopts(Sock, [{nodelay, true}]).
