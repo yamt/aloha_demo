@@ -60,10 +60,8 @@ ofp_setup(#datapath{sock=Sock} = Dp) ->
 
 loop(#datapath{sock=Sock, parser=Parser} = Dp) ->
     aloha_socket:setopts(Sock, [{active, once}]),
-    lager:debug("loop ~p~n", [Parser]),
     receive
         {tcp, Sock, Data} ->
-            lager:debug("tcp receive ~w~n", [Data]),
             {ok, NewParser, Msgs} = ofp_parser:parse(Parser, Data),
             lists:foreach(fun(M) -> self() ! {msg, Sock, M} end, Msgs),
             loop(Dp#datapath{parser=NewParser});
@@ -71,7 +69,7 @@ loop(#datapath{sock=Sock, parser=Parser} = Dp) ->
             lager:info("OF ~p closed", [Sock]),
             done(Dp);
         {msg, Sock, #ofp_message{xid=Xid, body=Body}=Msg} ->
-            lager:debug("msg received ~p~n", [Msg]),
+            lager:debug("OF msg received ~p~n", [aloha_utils:pr(Msg, ?MODULE)]),
             Dp2 = handle_msg(Body, Xid, Dp),
             loop(Dp2);
         {packet_out, Port, BinPacket} ->
@@ -133,7 +131,7 @@ send_msg(Dp, Body) ->
 
 send_msg(Dp, Body, Xid) ->
     Msg = msg(Body, Xid),
-    lager:debug("msg sent ~w~n", [Msg]),
+    lager:debug("OF msg sent ~w~n", [aloha_utils:pr(Msg, ?MODULE)]),
     {ok, BinMsg} = of_protocol:encode(Msg),
     case aloha_socket:send(Dp#datapath.sock, BinMsg) of
         ok -> ok;
