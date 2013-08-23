@@ -150,7 +150,7 @@ packet_in(Packet, InPort, #datapath{id = DpId}) ->
     gen_server:cast(NicPid, {packet, Packet}).
 
 packet_out(BinPacket, Port, DpId) ->
-    lager:debug("packet_out ~w ~w~n", [DpId, Port, BinPacket]),
+    lager:debug("packet_out ~p ~w ~w~n", [DpId, Port, BinPacket]),
     case catch ets:lookup_element(aloha_datapath, DpId, 2) of
         Pid when is_pid(Pid) -> Pid ! {packet_out, Port, BinPacket};
         _ -> lager:info("no datapath process for ~w", [DpId])
