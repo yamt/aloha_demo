@@ -178,6 +178,10 @@ create_nic(DpId, InPort) ->
                                   {addr, HwAddr},
                                   {ip_addr, IPAddr},
                                   {ipv6_addr, IPv6Addr},
+                                  % use a smaller mtu as we do
+                                  % ether over OF over TCP/IP over ether.
+                                  % just a guess.
+                                  {mtu, 1300},
                                   {backend, {?MODULE, packet_out,
                                              [InPort, DpId]}}], []),
     lager:info("nic ~p created", [Pid]).
