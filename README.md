@@ -59,5 +59,6 @@ and/or:
     # ifconfig thesomenic inet6 2001:db8::2
     # curl -H 'Host: hoge' -g 'http://[2001:db8::1]:8080/'
 
-the ipv6 case needs -H option because of
-https://github.com/extend/cowboy/pull/575.
+Currently the ipv6 case needs explicit Host: header override
+because of the lack of ipv6 literal support in cowboy.
+(cf. https://github.com/extend/cowboy/pull/575)
