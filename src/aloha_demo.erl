@@ -34,14 +34,14 @@ start() ->
     ets:new(aloha_nic, [set, named_table, public]),
 
     aloha_tcp:start(),
-    aloha_upper:start([{recv_mode, async}]),
-%    aloha_upper:start([{mod, gen_tcp}]),
+    aloha_upper:start({aloha_demo, 9999}, [{recv_mode, async}]),
+%    aloha_upper:start({aloha_demo, 9999}, [{mod, gen_tcp}]),
 
 %    application:start(sasl),
     application:start(ranch),
     application:start(crypto),
     application:start(cowboy),
 %    aloha_httpd:start(aloha_httpd, ranch_tcp, 8080),
-    aloha_httpd:start(aloha_httpd_aloha, aloha_ranch, 8080),
+    aloha_httpd:start(aloha_httpd_aloha, aloha_ranch, {aloha_demo, 8080}),
 
     aloha_ofc:start().

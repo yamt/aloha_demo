@@ -25,7 +25,7 @@
 % sample app logic
 
 -module(aloha_upper).
--export([start/1]).
+-export([start/2]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2,
          code_change/3]).
 -export([acceptor/2]).
@@ -40,9 +40,9 @@ acceptor(LSock, Opts) ->
     ok = aloha_socket:controlling_process(Sock, Pid),
     acceptor(LSock, Opts).
 
-start(Opts) ->
+start(Port, Opts) ->
     Mod = proplists:get_value(mod, Opts, aloha_socket),
-    {ok, LSock} = Mod:listen(9999, [binary, {packet, raw}, {reuseaddr, true},
+    {ok, LSock} = Mod:listen(Port, [binary, {packet, raw}, {reuseaddr, true},
                                     {nodelay, true}, {active, false}]),
     proc_lib:spawn(?MODULE, acceptor, [LSock, Opts]).
 

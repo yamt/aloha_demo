@@ -144,7 +144,7 @@ decode_enum(Enum, Value) ->
 
 packet_in(Packet, InPort, #datapath{id = DpId}) ->
     lager:debug("packet_in ~w ~w ~w~n", [DpId, InPort, Packet]),
-    NicPid = find_or_create_nic(DpId, InPort),
+    NicPid = find_or_create_nic(aloha_demo, DpId, InPort),
     gen_server:cast(NicPid, {packet, Packet}).
 
 packet_out(BinPacket, Port, DpId) ->
@@ -158,23 +158,26 @@ send_packet_out(BinPacket, Port, Dp) ->
     send_msg(Dp, #ofp_packet_out{actions = [#ofp_action_output{port = Port}],
                                  in_port = controller, data = BinPacket}).
 
-find_or_create_nic(DpId, InPort) ->
-    Key = {DpId, InPort},
+aloha_of_port_key(DpId, InPort) -> {aloha_of_port, DpId, InPort}.
+
+find_or_create_nic(NS, DpId, InPort) ->
+    Key = aloha_of_port_key(DpId, InPort),
     case catch ets:lookup_element(aloha_nic, Key, 2) of
         Pid when is_pid(Pid) ->
             Pid;
         _ ->
-            create_nic(DpId, InPort),
-            find_or_create_nic(DpId, InPort)
+            create_nic(NS, DpId, InPort),
+            find_or_create_nic(NS, DpId, InPort)
     end.
 
-create_nic(DpId, InPort) ->
-    Key = {DpId, InPort},
+create_nic(NS, DpId, InPort) ->
+    Key = aloha_of_port_key(DpId, InPort),
     HwAddr = <<16#0003478ca1b3:48>>,  % taken from my unused machine
     IPAddr = <<192,0,2,1>>,
     IPv6Addr = <<16#2001:16, 16#db8:16, 0:(16*5), 1:16>>,  % RFC 3849
     {ok, Pid} = gen_server:start(aloha_nic,
-                                 [{key, Key},
+                                 [{namespace, NS},
+                                  {key, Key},
                                   {addr, HwAddr},
                                   {ip_addr, IPAddr},
                                   {ipv6_addr, IPv6Addr},
