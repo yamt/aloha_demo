@@ -34,7 +34,7 @@ start() ->
     ets:new(aloha_nic, [set, named_table, public]),
 
     aloha_tcp:start(),
-    aloha_upper:start([]),
+    aloha_upper:start([{recv_mode, async}]),
 %    aloha_upper:start([{mod, gen_tcp}]),
 
 %    application:start(sasl),

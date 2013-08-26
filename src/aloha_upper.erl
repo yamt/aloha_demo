@@ -55,8 +55,10 @@ init(Opts) ->
     lager:info("peer ~p sock ~p", [PeerName, SockName]),
     ok = aloha_socket:send(Sock, io_lib:format("HELLO ~p~n", [PeerName])),
     ok = aloha_socket:send(Sock, io_lib:format("THIS IS ~p~n", [SockName])),
-    ok = aloha_socket:setopts(Sock, [{active, once}]),
-    %spawn(fun() -> loop(Sock) end),
+    case proplists:get_value(recv_mode, Opts) of
+        async -> ok = aloha_socket:setopts(Sock, [{active, once}]);
+        sync -> spawn(fun() -> loop(Sock) end)
+    end,
     State = #state{sock = Sock},
     {ok, State}.
 
