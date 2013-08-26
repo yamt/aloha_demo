@@ -58,4 +58,6 @@ and/or:
 
     # ifconfig thesomenic inet6 2001:db8::2
     # curl -H 'Host: hoge' -g 'http://[2001:db8::1]:8080/'
-    (cf. https://github.com/extend/cowboy/pull/575)
+
+the ipv6 case needs -H option because of
+https://github.com/extend/cowboy/pull/575.
