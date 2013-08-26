@@ -19,6 +19,12 @@ connections on port 6633.
           |
        aloha_ranch  (ranch transport module for aloha_socket)
           |
+       (port 8080)
+          |
+          |   aloha_upper  ("toupper" echo server)
+          |      |
+          |   (port 9999) 
+          |      |
        aloha_socket
           |
        aloha_tcp  (Pure Erlang TCP/IP stack)
