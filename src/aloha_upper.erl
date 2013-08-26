@@ -85,7 +85,7 @@ handle_info({tcp_closed, Sock}, #state{sock = Sock} = State) ->
     ok = aloha_socket:close(Sock),
     {stop, normal, State};
 handle_info(Info, State) ->
-    lager:info("handle_info: unknown ~w", [Info]),
+    lager:info("handle_info: unknown ~p", [Info]),
     {noreply, State}.
 
 terminate(_Reason, _State) ->
