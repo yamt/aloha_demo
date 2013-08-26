@@ -76,12 +76,12 @@ handle_cast(_Req, State) ->
     {noreply, State}.
 
 handle_info({tcp, Sock, Data}, #state{sock = Sock} = State) ->
-    lager:info("handle_info: RECV len ~p", [byte_size(Data)]),
+    lager:debug("handle_info: RECV len ~p", [byte_size(Data)]),
     upper(Sock, Data),
     ok = aloha_socket:setopts(Sock, [{active, once}]),
     {noreply, State};
 handle_info({tcp_closed, Sock}, #state{sock = Sock} = State) ->
-    lager:info("handle_info: CLOSED ~w", [Sock]),
+    lager:debug("handle_info: CLOSED ~w", [Sock]),
     ok = aloha_socket:close(Sock),
     {stop, normal, State};
 handle_info(Info, State) ->
