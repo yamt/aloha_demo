@@ -33,6 +33,7 @@ start() ->
     ets:new(aloha_datapath, [set, named_table, public]),
     ets:new(aloha_nic, [set, named_table, public]),
 
+    aloha_neighbor:start_link(),
     aloha_tcp:start(),
     aloha_upper:start({aloha_demo, 9999}, [{recv_mode, async}]),
 %    aloha_upper:start({aloha_demo, 9999}, [{mod, gen_tcp}]),

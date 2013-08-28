@@ -186,8 +186,8 @@ create_nic(NS, DpId, InPort) ->
                                  [{namespace, NS},
                                   {key, Key},
                                   {addr, HwAddr},
-                                  {ip_addr, IPAddr},
-                                  {ipv6_addr, IPv6Addr},
+                                  {ip, IPAddr},
+                                  {ipv6, IPv6Addr},
                                   % use a smaller mtu as we do
                                   % ether over OF over TCP/IP over ether.
                                   % just a guess.
