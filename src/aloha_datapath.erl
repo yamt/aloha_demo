@@ -44,6 +44,13 @@ ofp_setup(#datapath{sock=Sock} = Dp) ->
     send_msg(Dp, #ofp_hello{}),
     send_msg(Dp, #ofp_features_request{}),
     send_msg(Dp, #ofp_set_config{miss_send_len=no_buffer}),
+    PacketInMask = [no_match, action, invalid_ttl],
+    PortStatusMask = [add, delete, modify],
+    FlowRemovedMask = [idle_timeout, hard_timeout, delete, group_delete],
+    send_msg(Dp, #ofp_set_async{
+                     packet_in_mask = {PacketInMask, PacketInMask},
+                     port_status_mask = {PortStatusMask, PortStatusMask},
+                     flow_removed_mask = {FlowRemovedMask, FlowRemovedMask}}),
     send_msg(Dp, #ofp_flow_mod{table_id=0, command=add,
         instructions=[
             #ofp_instruction_apply_actions{
