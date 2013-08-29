@@ -29,12 +29,10 @@ start() ->
     lager:start(),
     lager:info("start~n", []),
 
-    % XXX these should not be here
     ets:new(aloha_datapath, [set, named_table, public]),
-    ets:new(aloha_nic, [set, named_table, public]),
 
+    aloha_tcp:init_tables(),
     aloha_neighbor:start_link(),
-    aloha_tcp:start(),
     aloha_upper:start({aloha_demo, 9999}, [{recv_mode, async}]),
 %    aloha_upper:start({aloha_demo, 9999}, [{mod, gen_tcp}]),
 
@@ -44,5 +42,8 @@ start() ->
     application:start(cowboy),
 %    aloha_httpd:start(aloha_httpd, ranch_tcp, 8080),
     aloha_httpd:start(aloha_httpd_aloha, aloha_ranch, {aloha_demo, 8080}),
+
+    application:start(sasl),
+    aloha_client_test:start(),
 
     aloha_ofc:start().
