@@ -44,6 +44,6 @@ start() ->
     aloha_httpd:start(aloha_httpd_aloha, aloha_ranch, {aloha_demo, 8080}),
 
     application:start(sasl),
-    aloha_client_test:start(),
+%    aloha_client_test:start(),
 
     aloha_ofc:start().
