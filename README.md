@@ -57,8 +57,4 @@ On the host which the above "Some NIC" belongs to, try:
 and/or:
 
     # ifconfig thesomenic inet6 2001:db8::2
-    # curl -H 'Host: hoge' -g 'http://[2001:db8::1]:8080/'
-
-Currently the ipv6 case needs explicit Host: header override
-because of the lack of ipv6 literal support in cowboy.
-(cf. https://github.com/extend/cowboy/pull/575)
+    # curl -g 'http://[2001:db8::1]:8080/'
