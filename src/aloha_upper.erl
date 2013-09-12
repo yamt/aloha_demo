@@ -32,7 +32,7 @@
 
 -behaviour(gen_server).
 
--record(state, {sock}).
+-record(state, {sock, mode}).
 
 acceptor(LSock, Opts) ->
     {ok, Sock} = aloha_socket:accept(LSock),
@@ -55,11 +55,12 @@ init(Opts) ->
     lager:info("peer ~p sock ~p", [PeerName, SockName]),
     ok = aloha_socket:send(Sock, io_lib:format("HELLO ~p~n", [PeerName])),
     ok = aloha_socket:send(Sock, io_lib:format("THIS IS ~p~n", [SockName])),
-    case proplists:get_value(recv_mode, Opts) of
+    Mode = proplists:get_value(recv_mode, Opts),
+    case Mode of
         async -> ok = aloha_socket:setopts(Sock, [{active, once}]);
         sync -> spawn(fun() -> loop(Sock) end)
     end,
-    State = #state{sock = Sock},
+    State = #state{sock = Sock, mode = Mode},
     {ok, State}.
 
 loop(Sock) ->
@@ -75,12 +76,18 @@ handle_call(_Req, _From, State) ->
 handle_cast(_Req, State) ->
     {noreply, State}.
 
-handle_info({tcp, Sock, Data}, #state{sock = Sock} = State) ->
+handle_info({tcp, Sock, Data}, #state{sock = Sock, mode = async} = State) ->
     lager:debug("handle_info: RECV len ~p", [byte_size(Data)]),
     upper(Sock, Data),
     ok = aloha_socket:setopts(Sock, [{active, once}]),
     {noreply, State};
-handle_info({tcp_closed, Sock}, #state{sock = Sock} = State) ->
+handle_info({tcp_error, Sock, Reason},
+            #state{sock = Sock, mode = async} = State) ->
+    lager:debug("handle_info: tcp_error ~w ~p", [Sock, Reason]),
+    ok = aloha_socket:close(Sock),
+    {stop, normal, State};
+handle_info({tcp_closed, Sock},
+            #state{sock = Sock, mode = async} = State) ->
     lager:debug("handle_info: CLOSED ~w", [Sock]),
     ok = aloha_socket:close(Sock),
     {stop, normal, State};
