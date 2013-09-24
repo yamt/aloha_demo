@@ -39,6 +39,7 @@ start() ->
 %    application:start(sasl),
     application:start(ranch),
     application:start(crypto),
+    application:start(cowlib),
     application:start(cowboy),
 %    aloha_httpd:start(aloha_httpd, ranch_tcp, 8080),
     aloha_httpd:start(aloha_httpd_aloha, aloha_ranch, {aloha_demo, 8080}),
