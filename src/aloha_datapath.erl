@@ -72,7 +72,13 @@ loop(#datapath{sock=Sock, parser=Parser} = Dp) ->
     aloha_socket:setopts(Sock, [{active, once}]),
     receive
         {tcp, Sock, Data} ->
-            {ok, NewParser, Msgs} = ofp_parser:parse(Parser, Data),
+            {ok, NewParser, Msgs} = try
+                ofp_parser:parse(Parser, Data)
+            catch
+                error:E ->
+                    lager:error("parse error ~p data ~p", [E, Data]),
+                    error(E)
+            end,
             lists:foreach(fun(M) -> self() ! {msg, Sock, M} end, Msgs),
             loop(Dp#datapath{parser=NewParser});
         {tcp_closed, Sock} ->
