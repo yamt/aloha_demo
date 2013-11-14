@@ -51,7 +51,7 @@ ofp_setup(#datapath{sock=Sock} = Dp) ->
                      packet_in_mask = {PacketInMask, PacketInMask},
                      port_status_mask = {PortStatusMask, PortStatusMask},
                      flow_removed_mask = {FlowRemovedMask, FlowRemovedMask}}),
-    send_msg(Dp, #ofp_flow_mod{table_id=0, command=add,
+    send_msg(Dp, #ofp_flow_mod{table_id=0, command=add, priority=0,
         instructions=[
             #ofp_instruction_apply_actions{
                 actions=[
