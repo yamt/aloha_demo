@@ -26,7 +26,7 @@
 -behaviour(ranch_transport).
 
 -export([name/0, messages/0]).
--export([listen/1, accept/2]).
+-export([listen/1, accept/2, accept_ack/2]).
 -export([controlling_process/2, setopts/2, send/2, recv/3, close/1,
          peername/1, sockname/1]).
 -export([sendfile/2, connect/3]).
@@ -43,6 +43,9 @@ listen(Opts) ->
 accept(Sock, _Timeout) ->
     lager:debug("aloha_ranch accept ~p ~p", [Sock, _Timeout]),
     aloha_socket:accept(Sock).  % XXX timeout
+
+accept_ack(_Sock, _Timeout) ->
+    ok.
 
 connect(_Host, _Port, _Opts) ->
     {error, unimplemented}.
