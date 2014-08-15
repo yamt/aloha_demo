@@ -59,7 +59,7 @@ init(Opts) ->
 
 loop(Sock) ->
     case aloha_socket:recv(Sock, 0, 1000) of
-        {ok, Data} -> loop(Sock);
+        {ok, _Data} -> loop(Sock);
         {error, timeout} -> lager:info("recv ~p timeout", [Sock]), loop(Sock);
         Error -> lager:info("recv ~p error ~p", [Sock, Error])
     end.
