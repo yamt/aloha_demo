@@ -38,7 +38,11 @@ handle_conn(Sock) ->
     Dp = #datapath{sock=Sock},
     ofp_setup(Dp),
     {ok, Parser} = ofp_parser:new(?OFP_VERSION),
-    loop(Dp#datapath{parser=Parser}).
+    try
+        loop(Dp#datapath{parser=Parser})
+    catch error:_ ->
+        done(Dp)
+    end.
 
 ofp_setup(#datapath{sock=Sock} = Dp) ->
     send_msg(Dp, #ofp_hello{}),
