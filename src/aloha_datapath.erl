@@ -40,7 +40,9 @@ handle_conn(Sock) ->
     {ok, Parser} = ofp_parser:new(?OFP_VERSION),
     try
         loop(Dp#datapath{parser=Parser})
-    catch error:_ ->
+    catch error:E ->
+        lager:warning("datapath process ~p crashed ~p trace ~p",
+                      [self(), E, erlang:get_stacktrace()]),
         done(Dp)
     end.
 
